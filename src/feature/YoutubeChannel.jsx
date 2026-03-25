@@ -7,10 +7,12 @@ function YoutubeChannel() {
   const [youtubeError, setYoutubeError] = useState('');
   const [channelUrl, setChannelUrl] = useState('');
   const [logs, setLogs] = useState([]);
-  const logEndRef = useRef(null);
+  const terminalRef = useRef(null);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
   }, [logs]);
 
   function appendLog(text, type = 'info') {
@@ -64,13 +66,12 @@ function YoutubeChannel() {
         </div>
       </form>
       {logs.length > 0 && (
-        <div className='terminal'>
+        <div className='terminal' ref={terminalRef}>
           {logs.map((log, i) => (
             <div key={i} className={`terminal-line terminal-line--${log.type}`}>
               {log.text}
             </div>
           ))}
-          <div ref={logEndRef} />
         </div>
       )}
       <p className='notice'>
