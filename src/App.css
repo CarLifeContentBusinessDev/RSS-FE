@@ -136,6 +136,34 @@ h2 {
   font-size: 13px;
 }
 
+.terminal {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 12px 14px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.terminal-line {
+  color: #ccc;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-line--done {
+  color: #4caf50;
+}
+
+.terminal-line--skip {
+  color: #888;
+}
+
 .empty {
   text-align: center;
   color: #555;
