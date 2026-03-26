@@ -1,8 +1,22 @@
-import { deleteChannel, getRssUrl, updateChannel } from '../api.js';
+import { useState, useRef, useEffect } from 'react';
+import { deleteChannel, getRssUrl, updateYouTubeChannel, updatePodbbangChannel, updateSpotifyChannel } from '../api.js';
 import { useChannels } from '../context/ChannelContext.jsx';
 
 function ChannelCard() {
   const { channels, refreshChannels } = useChannels();
+  const [updatingId, setUpdatingId] = useState(null);
+  const [updateLogs, setUpdateLogs] = useState([]);
+  const terminalRef = useRef(null);
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [updateLogs]);
+
+  function appendLog(text, type = 'info') {
+    setUpdateLogs((prev) => [...prev, { text, type }]);
+  }
 
   function copyRssUrl(channel) {
     const url = channel.externalRssUrl || getRssUrl(channel.id);
@@ -28,12 +42,38 @@ function ChannelCard() {
   }
 
   async function handleUpdate(channelId, type) {
+    const realId = channelId.replace(/^(youtube-|podbbang_|spotify_)/, '');
+    setUpdatingId(channelId);
+    setUpdateLogs([{ text: '업데이트를 시작합니다...', type: 'info' }]);
+
     try {
-      await updateChannel(channelId, type);
+      if (type === 'podbbang') {
+        await updatePodbbangChannel(realId, (event) => {
+          if (event.type === 'start') appendLog(`총 ${event.total}개 에피소드`);
+          if (event.type === 'fetch_page') appendLog(`페이지 ${event.current}/${event.total} 가져오는 중...`);
+        });
+      } else if (type === 'spotify') {
+        await updateSpotifyChannel(realId, (event) => {
+          if (event.type === 'start') appendLog(`총 ${event.total}개 에피소드`);
+          if (event.type === 'fetch_page') appendLog(`${event.fetched}/${event.total} 에피소드 가져옴`);
+        });
+      } else {
+        const youtubeUrl = realId.startsWith('PL')
+          ? `https://www.youtube.com/playlist?list=${realId}`
+          : `https://www.youtube.com/channel/${realId}`;
+        await updateYouTubeChannel(realId, youtubeUrl, (event) => {
+          if (event.type === 'start') appendLog(`총 ${event.total}개 영상`);
+          if (event.type === 'video_start') appendLog(`[${event.current}/${event.total}] 처리 중... (${event.videoId})`);
+          if (event.type === 'video_done') appendLog(`[${event.current}/${event.total}] ✓ ${event.title}`, 'done');
+          if (event.type === 'video_skip') appendLog(`[${event.current}/${event.total}] - ${event.reason}`, 'skip');
+        });
+      }
+      appendLog('업데이트 완료', 'done');
       await refreshChannels();
     } catch (err) {
-      console.error(err);
-      alert('업데이트 실패');
+      appendLog(`오류: ${err.message}`, 'error');
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -80,13 +120,25 @@ function ChannelCard() {
                 >
                   삭제
                 </button>
-                <button onClick={() => handleUpdate(channel.id, channel.type)}>
-                  업데이트
+                <button
+                  onClick={() => handleUpdate(channel.id, channel.type)}
+                  disabled={updatingId !== null}
+                >
+                  {updatingId === channel.id ? '업데이트 중...' : '업데이트'}
                 </button>
               </div>
               <div className='rss-link'>
                 <code>{channel.externalRssUrl || getRssUrl(channel.id)}</code>
               </div>
+              {updatingId === channel.id && updateLogs.length > 0 && (
+                <div className='terminal' ref={terminalRef}>
+                  {updateLogs.map((log, i) => (
+                    <div key={i} className={`terminal-line terminal-line--${log.type}`}>
+                      {log.text}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>

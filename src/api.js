@@ -82,8 +82,67 @@ export async function addSpotifyShow(showUrl) {
   return response.json();
 }
 
+export function addPodbbangChannelWithProgress(channelId, onProgress) {
+  return streamProgress(
+    `${API_BASE}/api/podbbang/channel-stream?channelId=${encodeURIComponent(channelId)}`,
+    onProgress,
+  );
+}
+
+export function addSpotifyShowWithProgress(spotifyUrl, onProgress) {
+  return streamProgress(
+    `${API_BASE}/api/spotify/find-rss-stream?spotifyUrl=${encodeURIComponent(spotifyUrl)}`,
+    onProgress,
+  );
+}
+
 export function getRssUrl(channelId) {
   return `${API_BASE}/rss/${channelId}`;
+}
+
+function streamProgress(url, onProgress) {
+  return new Promise((resolve, reject) => {
+    const es = new EventSource(url);
+    let completed = false;
+
+    es.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'complete' || data.type === 'error') {
+        completed = true;
+        es.close();
+        data.type === 'error' ? reject(new Error(data.message)) : resolve(data);
+      } else {
+        onProgress?.(data);
+      }
+    };
+
+    es.onerror = () => {
+      if (completed) return;
+      es.close();
+      reject(new Error('연결 오류'));
+    };
+  });
+}
+
+export function updateYouTubeChannel(channelId, url, onProgress) {
+  return streamProgress(
+    `${API_BASE}/youtube/update-stream/${channelId}?url=${encodeURIComponent(url)}`,
+    onProgress,
+  );
+}
+
+export function updatePodbbangChannel(channelId, onProgress) {
+  return streamProgress(
+    `${API_BASE}/api/podbbang/update-stream/${channelId}`,
+    onProgress,
+  );
+}
+
+export function updateSpotifyChannel(showId, onProgress) {
+  return streamProgress(
+    `${API_BASE}/api/spotify/update-stream/${showId}`,
+    onProgress,
+  );
 }
 
 export async function updateChannel(channelId, type) {
