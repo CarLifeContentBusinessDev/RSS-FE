@@ -86,43 +86,31 @@ function ChannelCard() {
     try {
       if (type === "podbbang") {
         await updatePodbbangChannel(realId, (event) => {
-          if (event.type === "start")
+          if (event.type === "start") {
             appendLog(`총 ${event.episodeCount}개 에피소드`);
-          if (event.type === "fetch_page")
+          }
+          if (event.type === "fetch_page") {
             appendLog(
               `페이지 ${event.current}/${event.episodeCount} 가져오는 중...`,
             );
+          }
         });
       } else if (type === "spotify") {
         await updateSpotifyChannel(realId, (event) => {
-          if (event.type === "start")
+          if (event.type === "start") {
             appendLog(`총 ${event.episodeCount}개 에피소드`);
-          if (event.type === "fetch_page")
+          }
+          if (event.type === "fetch_page") {
             appendLog(`${event.fetched}/${event.episodeCount} 에피소드 가져옴`);
+          }
         });
       } else {
         const youtubeUrl = realId.startsWith("PL")
           ? `https://www.youtube.com/playlist?list=${realId}`
           : `https://www.youtube.com/channel/${realId}`;
-        await updateYouTubeChannel(realId, youtubeUrl, (event) => {
-          if (event.type === "start")
-            appendLog(`총 ${event.episodeCount}개 영상`);
-          if (event.type === "video_start")
-            appendLog(
-              `[${event.current}/${event.episodeCount}] 처리 중... (${event.videoId})`,
-            );
-          if (event.type === "video_done")
-            appendLog(
-              `[${event.current}/${event.episodeCount}] ✓ ${event.title}`,
-              "done",
-            );
-          if (event.type === "video_skip")
-            appendLog(
-              `[${event.current}/${event.episodeCount}] - ${event.reason}`,
-              "skip",
-            );
-        });
+        await updateYouTubeChannel(realId, youtubeUrl);
       }
+
       appendLog("업데이트 완료", "done");
       await refreshChannels();
     } catch (err) {
@@ -200,10 +188,15 @@ function ChannelCard() {
                 )}
               </div>
               <div className="channel-actions">
-                <button onClick={() => copyRssUrl(channel)} className="btn-rss">
+                <button
+                  type="button"
+                  onClick={() => copyRssUrl(channel)}
+                  className="btn-rss"
+                >
                   RSS 복사
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDeleteChannel(channel.id, channel.title)}
                   className="btn-delete"
                 >
@@ -211,6 +204,7 @@ function ChannelCard() {
                 </button>
                 {isYouTubeChannel(channel) && (
                   <button
+                    type="button"
                     onClick={() => startAuthorEdit(channel)}
                     disabled={updatingId !== null}
                   >
@@ -218,6 +212,7 @@ function ChannelCard() {
                   </button>
                 )}
                 <button
+                  type="button"
                   onClick={() => handleUpdate(channel.id, channel.type)}
                   disabled={updatingId !== null}
                 >

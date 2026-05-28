@@ -80,8 +80,8 @@ function YoutubeChannel() {
         있습니다.
       </p>
       <p className="notice">
-        author는 선택 사항입니다. 이후 수정할 수 있고, 수정 시 RSS도 함께
-        업데이트하는 것을 권장합니다.
+        author를 입력하지 않으면 채널명 또는 플레이리스트를 생성한 채널명이
+        author로 설정됩니다.
       </p>
       {youtubeError && <div className="error">{youtubeError}</div>}
     </section>
