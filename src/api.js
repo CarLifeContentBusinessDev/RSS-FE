@@ -1,19 +1,39 @@
 const API_BASE = import.meta.env.VITE_API_URL;
 
+async function postJson(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      error.message ||
+        error.error ||
+        `Request failed with status: ${response.status}`,
+    );
+  }
+
+  return response.json();
+}
+
 export async function getChannels() {
   const response = await fetch(`${API_BASE}/api/channels`);
   return response.json();
 }
 
-export async function addYouTubeChannel(url) {
-  const response = await fetch(`${API_BASE}/youtube/process`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ url }),
-  });
-  return response.json();
+export async function addYouTubeChannel(url, author) {
+  const body = { url };
+
+  if (author?.trim()) {
+    body.author = author.trim();
+  }
+
+  return postJson(`${API_BASE}/youtube/process`, body);
 }
 
 // EventSource 대신 공통 streamProgress 함수를 사용하도록 통일하고 signal 인자 추가
@@ -151,12 +171,14 @@ async function streamProgress(url, onProgress, signal) {
 }
 
 // update 계열 함수들도 signal 인자 추가
-export function updateYouTubeChannel(channelId, url, onProgress, signal) {
-  return streamProgress(
-    `${API_BASE}/youtube/update-stream/${channelId}?url=${encodeURIComponent(url)}`,
-    onProgress,
-    signal,
-  );
+export async function updateYouTubeChannel(channelId, url, author) {
+  const body = { url };
+
+  if (author?.trim()) {
+    body.author = author.trim();
+  }
+
+  return postJson(`${API_BASE}/youtube/update/${channelId}`, body);
 }
 
 export function updatePodbbangChannel(channelId, onProgress, signal) {
@@ -175,7 +197,7 @@ export function updateSpotifyChannel(showId, onProgress, signal) {
   );
 }
 
-export async function updateChannel(channelId, type) {
+export async function updateChannel(channelId, type, author) {
   const realId = channelId.replace(/^(youtube-|podbbang_|spotify_)/, "");
 
   let endpoint = "";
@@ -195,10 +217,16 @@ export async function updateChannel(channelId, type) {
       ? `https://www.youtube.com/playlist?list=${realId}`
       : `https://www.youtube.com/channel/${realId}`;
 
+    const body = { url: youtubeUrl };
+
+    if (author?.trim()) {
+      body.author = author.trim();
+    }
+
     options.headers = {
       "Content-Type": "application/json",
     };
-    options.body = JSON.stringify({ url: youtubeUrl });
+    options.body = JSON.stringify(body);
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, options);

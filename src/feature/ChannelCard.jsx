@@ -12,6 +12,8 @@ function ChannelCard() {
   const { channels, refreshChannels } = useChannels();
   const [updatingId, setUpdatingId] = useState(null);
   const [updateLogs, setUpdateLogs] = useState([]);
+  const [editingAuthorId, setEditingAuthorId] = useState(null);
+  const [authorDraft, setAuthorDraft] = useState("");
   const terminalRef = useRef(null);
 
   useEffect(() => {
@@ -28,6 +30,35 @@ function ChannelCard() {
     const url = channel.externalRssUrl || getRssUrl(channel.id);
     navigator.clipboard.writeText(url);
     alert("RSS URL이 복사되었습니다");
+  }
+
+  function isYouTubeChannel(channel) {
+    return (
+      !channel.type ||
+      channel.type === "youtube" ||
+      channel.type === "channel" ||
+      channel.type === "playlist"
+    );
+  }
+
+  function getChannelCount(channel) {
+    return channel.episodeCount ?? channel.videos?.length ?? 0;
+  }
+
+  function startAuthorEdit(channel) {
+    setEditingAuthorId(channel.id);
+    setAuthorDraft(channel.author ?? "");
+    setUpdateLogs([
+      {
+        text: "author를 수정하면 RSS도 함께 업데이트하는 것을 권장합니다.",
+        type: "info",
+      },
+    ]);
+  }
+
+  function cancelAuthorEdit() {
+    setEditingAuthorId(null);
+    setAuthorDraft("");
   }
 
   async function handleDeleteChannel(channelId, channelTitle) {
@@ -101,6 +132,35 @@ function ChannelCard() {
     }
   }
 
+  async function handleUpdateAuthor(channel) {
+    const realId = channel.id.replace(/^(youtube-|podbbang_|spotify_)/, "");
+    setUpdatingId(channel.id);
+    setUpdateLogs([
+      {
+        text: "author 정보를 저장하는 중...",
+        type: "info",
+      },
+    ]);
+
+    try {
+      await updateYouTubeChannel(
+        realId,
+        undefined,
+        authorDraft.trim() || undefined,
+      );
+      appendLog(
+        "author 수정이 완료되었습니다. RSS도 함께 업데이트하는 것을 권장합니다.",
+        "done",
+      );
+      await refreshChannels();
+      cancelAuthorEdit();
+    } catch (err) {
+      appendLog(`오류: ${err.message}`, "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <section className="channels">
       <h2>채널 목록 ({channels.length})</h2>
@@ -130,9 +190,14 @@ function ChannelCard() {
                 </h3>
                 <p className="channel-url">{channel.url}</p>
                 <p className="channel-meta">
-                  {channel.episodeCount || channel.videos.length}개 에피소드 ·{" "}
+                  {getChannelCount(channel)}개 에피소드 ·{" "}
                   {new Date(channel.addedAt).toLocaleDateString("ko-KR")} 추가
                 </p>
+                {isYouTubeChannel(channel) && (
+                  <p className="channel-author">
+                    author: {channel.author?.trim() ? channel.author : "미설정"}
+                  </p>
+                )}
               </div>
               <div className="channel-actions">
                 <button onClick={() => copyRssUrl(channel)} className="btn-rss">
@@ -144,6 +209,14 @@ function ChannelCard() {
                 >
                   삭제
                 </button>
+                {isYouTubeChannel(channel) && (
+                  <button
+                    onClick={() => startAuthorEdit(channel)}
+                    disabled={updatingId !== null}
+                  >
+                    author 수정
+                  </button>
+                )}
                 <button
                   onClick={() => handleUpdate(channel.id, channel.type)}
                   disabled={updatingId !== null}
@@ -151,6 +224,41 @@ function ChannelCard() {
                   {updatingId === channel.id ? "업데이트 중..." : "업데이트"}
                 </button>
               </div>
+              {editingAuthorId === channel.id && isYouTubeChannel(channel) && (
+                <div className="author-editor">
+                  <div className="author-editor__label">기존 author</div>
+                  <div className="author-editor__current">
+                    {channel.author?.trim() ? channel.author : "미설정"}
+                  </div>
+                  <p className="author-editor__notice">
+                    * author 수정 후 RSS도 함께 업데이트하는 것을 권장합니다.
+                  </p>
+                  <div className="author-editor__form">
+                    <input
+                      className="author-editor__input"
+                      type="text"
+                      value={authorDraft}
+                      onChange={(e) => setAuthorDraft(e.target.value)}
+                      placeholder="새 author 입력"
+                      disabled={updatingId === channel.id}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateAuthor(channel)}
+                      disabled={updatingId === channel.id}
+                    >
+                      {updatingId === channel.id ? "저장 중..." : "저장"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelAuthorEdit}
+                      disabled={updatingId === channel.id}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="rss-link">
                 <code>{channel.externalRssUrl || getRssUrl(channel.id)}</code>
               </div>

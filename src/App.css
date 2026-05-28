@@ -5,7 +5,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: #0f0f0f;
   color: #e4e4e4;
   line-height: 1.6;
@@ -90,11 +91,15 @@ h2 {
 }
 
 .form-group input[type="text"] {
+  min-width: 0;
+}
+
+.form-group .url-input {
   flex: 1;
 }
 
-.form-group input[type="number"] {
-  width: 80px;
+.form-group .author-input {
+  width: 240px;
 }
 
 .form-group button {
@@ -145,7 +150,7 @@ h2 {
   padding: 12px 14px;
   max-height: 200px;
   overflow-y: auto;
-  font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-family: "Consolas", "Menlo", "Monaco", monospace;
   font-size: 12px;
   line-height: 1.7;
 }
@@ -238,6 +243,12 @@ h2 {
   margin-bottom: 12px;
 }
 
+.channel-author {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
 .channel-actions {
   display: flex;
   gap: 6px;
@@ -309,9 +320,86 @@ h2 {
 }
 
 .rss-link code {
-  font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+  font-family: "SF Mono", "Monaco", "Courier New", monospace;
   font-size: 12px;
   color: #888;
+}
+
+.author-editor {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  background: #141414;
+}
+
+.author-editor__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.author-editor__current {
+  font-size: 13px;
+  color: #e4e4e4;
+  margin-bottom: 8px;
+}
+
+.author-editor__notice {
+  font-size: 12px;
+  color: #dbb66f;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.author-editor__form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.author-editor__input {
+  flex: 1;
+  min-width: 0;
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #e4e4e4;
+  transition: all 0.15s;
+}
+
+.author-editor__input:focus {
+  outline: none;
+  border-color: #444;
+  background: #161616;
+}
+
+.author-editor__form button {
+  background: #2a2a2a;
+  color: #e4e4e4;
+  border: 1px solid #3a3a3a;
+  border-radius: 5px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.author-editor__form button:hover:not(:disabled) {
+  background: #333;
+  border-color: #444;
+}
+
+.author-editor__form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -336,6 +424,14 @@ h2 {
   }
 
   .channel-actions button {
+    width: 100%;
+  }
+
+  .author-editor__form {
+    flex-direction: column;
+  }
+
+  .author-editor__form button {
     width: 100%;
   }
 }

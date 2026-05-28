@@ -120,7 +120,7 @@ npm run build
 프론트엔드는 다음 백엔드 엔드포인트를 사용합니다:
 
 - `POST /youtube/process`: YouTube 채널/플레이리스트 처리
-- `POST /youtube/update/:id`: YouTube 채널 업데이트
+- `POST /youtube/update/:id`: YouTube 채널 업데이트, `author` 옵션 지원
 - `POST /api/podbbang/channel`: 팟빵 채널 추가
 - `POST /api/podbbang/update/:id`: 팟빵 채널 업데이트
 - `POST /api/spotify/find-rss`: Spotify 쇼의 RSS 피드 검색
