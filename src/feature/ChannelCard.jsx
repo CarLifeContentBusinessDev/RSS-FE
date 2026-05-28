@@ -50,7 +50,7 @@ function ChannelCard() {
     setAuthorDraft(channel.author ?? "");
     setUpdateLogs([
       {
-        text: "author를 수정하면 RSS도 함께 업데이트하는 것을 권장합니다.",
+        text: "author를 수정 완료",
         type: "info",
       },
     ]);
@@ -231,7 +231,8 @@ function ChannelCard() {
                     {channel.author?.trim() ? channel.author : "미설정"}
                   </div>
                   <p className="author-editor__notice">
-                    * author 수정 후 RSS도 함께 업데이트하는 것을 권장합니다.
+                    * author 수정 시에는 에피소드가 아닌 author 정보만
+                    업데이트됩니다.
                   </p>
                   <div className="author-editor__form">
                     <input
