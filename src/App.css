@@ -4,16 +4,58 @@
   padding: 0;
 }
 
+/* 1. 기본 (라이트모드) 색상 변수 정의 */
+:root {
+  --bg-main: #ffffff;
+  --bg-card: #f5f5f7;
+  --bg-input: #ffffff;
+  --border-color: #e5e5e7;
+  --border-hover: #d1d1d6;
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --text-muted: #6e6e73;
+
+  --btn-bg: #1d1d1f;
+  --btn-text: #ffffff;
+  --btn-hover: #333336;
+
+  --terminal-bg: #f0f0f2;
+}
+
+/* 2. 다크모드 색상 변수 재정의 */
+html.dark {
+  --bg-main: #0f0f0f;
+  --bg-card: #1a1a1a;
+  --bg-input: #0f0f0f;
+  --border-color: #2a2a2a;
+  --border-hover: #3a3a3a;
+
+  --text-primary: #e4e4e4;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
+  --btn-hover: #e4e4e4;
+
+  --terminal-bg: #0d0d0d;
+}
+
+/* 3. 요소들에 CSS 변수 적용 */
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #0f0f0f;
-  color: #e4e4e4;
+  background: var(--bg-main);
+  color: var(--text-primary);
   line-height: 1.6;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 #root {
@@ -35,14 +77,14 @@ header {
 header h1 {
   font-size: 28px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 header p {
   font-size: 15px;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 main {
@@ -52,21 +94,22 @@ main {
 }
 
 section {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 24px;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 h2 {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-secondary);
   margin-bottom: 16px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-size: 12px;
-  color: #888;
 }
 
 .form-group {
@@ -75,19 +118,18 @@ h2 {
 }
 
 .form-group input {
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 10px 14px;
   font-size: 14px;
-  color: #e4e4e4;
+  color: var(--text-primary);
   transition: all 0.15s;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #444;
-  background: #161616;
+  border-color: var(--border-hover);
 }
 
 .form-group input[type="text"] {
@@ -103,8 +145,8 @@ h2 {
 }
 
 .form-group button {
-  background: #fff;
-  color: #000;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
@@ -116,7 +158,7 @@ h2 {
 }
 
 .form-group button:hover:not(:disabled) {
-  background: #e4e4e4;
+  background: var(--btn-hover);
 }
 
 .form-group button:disabled {
@@ -127,7 +169,7 @@ h2 {
 .notice {
   margin-top: 8px;
   font-size: 13px;
-  color: #888;
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 
@@ -144,8 +186,8 @@ h2 {
 .terminal {
   margin-top: 12px;
   margin-bottom: 12px;
-  background: #0d0d0d;
-  border: 1px solid #2a2a2a;
+  background: var(--terminal-bg);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 12px 14px;
   max-height: 200px;
@@ -156,7 +198,7 @@ h2 {
 }
 
 .terminal-line {
-  color: #ccc;
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -166,12 +208,12 @@ h2 {
 }
 
 .terminal-line--skip {
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .empty {
   text-align: center;
-  color: #555;
+  color: var(--text-muted);
   padding: 40px 20px;
   font-size: 14px;
 }
@@ -183,21 +225,21 @@ h2 {
 }
 
 .channel-card {
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 16px;
   transition: all 0.15s;
 }
 
 .channel-card:hover {
-  border-color: #3a3a3a;
+  border-color: var(--border-hover);
 }
 
 .channel-info h3 {
   font-size: 15px;
   font-weight: 500;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 6px;
   display: flex;
   align-items: center;
@@ -230,7 +272,7 @@ h2 {
 
 .channel-url {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -239,13 +281,13 @@ h2 {
 
 .channel-meta {
   font-size: 12px;
-  color: #555;
+  color: var(--text-muted);
   margin-bottom: 12px;
 }
 
 .channel-author {
   font-size: 12px;
-  color: #888;
+  color: var(--text-secondary);
   margin-bottom: 12px;
 }
 
@@ -257,9 +299,9 @@ h2 {
 }
 
 .channel-actions button {
-  background: #2a2a2a;
-  color: #e4e4e4;
-  border: 1px solid #3a3a3a;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 7px 12px;
   font-size: 12px;
@@ -269,8 +311,7 @@ h2 {
 }
 
 .channel-actions button:hover:not(:disabled) {
-  background: #333;
-  border-color: #444;
+  border-color: var(--border-hover);
 }
 
 .channel-actions button:disabled {
@@ -312,8 +353,8 @@ h2 {
 }
 
 .rss-link {
-  background: #161616;
-  border: 1px solid #2a2a2a;
+  background: var(--terminal-bg);
+  border: 1px solid var(--border-color);
   padding: 10px 12px;
   border-radius: 5px;
   overflow-x: auto;
@@ -322,21 +363,21 @@ h2 {
 .rss-link code {
   font-family: "SF Mono", "Monaco", "Courier New", monospace;
   font-size: 12px;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .author-editor {
   margin-bottom: 12px;
   padding: 12px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: #141414;
+  background: var(--bg-card);
 }
 
 .author-editor__label {
   font-size: 11px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   margin-bottom: 6px;
@@ -344,7 +385,7 @@ h2 {
 
 .author-editor__current {
   font-size: 13px;
-  color: #e4e4e4;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -364,25 +405,24 @@ h2 {
 .author-editor__input {
   flex: 1;
   min-width: 0;
-  background: #0f0f0f;
-  border: 1px solid #2a2a2a;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 9px 12px;
   font-size: 13px;
-  color: #e4e4e4;
+  color: var(--text-primary);
   transition: all 0.15s;
 }
 
 .author-editor__input:focus {
   outline: none;
-  border-color: #444;
-  background: #161616;
+  border-color: var(--border-hover);
 }
 
 .author-editor__form button {
-  background: #2a2a2a;
-  color: #e4e4e4;
-  border: 1px solid #3a3a3a;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 7px 12px;
   font-size: 12px;
@@ -393,13 +433,37 @@ h2 {
 }
 
 .author-editor__form button:hover:not(:disabled) {
-  background: #333;
-  border-color: #444;
+  border-color: var(--border-hover);
 }
 
 .author-editor__form button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.theme-toggle {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
 @media (max-width: 768px) {
