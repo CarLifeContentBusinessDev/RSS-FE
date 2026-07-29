@@ -7,6 +7,7 @@ import {
   updateSpotifyChannel,
 } from "../api.js";
 import { useChannels } from "../context/ChannelContext.jsx";
+import ThumbnailUpload from "../components/ThumbnailUpload.jsx";
 
 function ChannelCard() {
   const { channels, refreshChannels } = useChannels();
@@ -14,6 +15,8 @@ function ChannelCard() {
   const [updateLogs, setUpdateLogs] = useState([]);
   const [editingAuthorId, setEditingAuthorId] = useState(null);
   const [authorDraft, setAuthorDraft] = useState("");
+  const [editingThumbnailId, setEditingThumbnailId] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
   const terminalRef = useRef(null);
 
   useEffect(() => {
@@ -46,6 +49,7 @@ function ChannelCard() {
   }
 
   function startAuthorEdit(channel) {
+    setEditingThumbnailId(null);
     setEditingAuthorId(channel.id);
     setAuthorDraft(channel.author ?? "");
     setUpdateLogs([
@@ -59,6 +63,23 @@ function ChannelCard() {
   function cancelAuthorEdit() {
     setEditingAuthorId(null);
     setAuthorDraft("");
+  }
+
+  function startThumbnailEdit(channel) {
+    setEditingAuthorId(null);
+    setEditingThumbnailId(channel.id);
+    setThumbnailFile(null);
+    setUpdateLogs([
+      {
+        text: "업로드할 썸네일 이미지를 선택해주세요",
+        type: "info",
+      },
+    ]);
+  }
+
+  function cancelThumbnailEdit() {
+    setEditingThumbnailId(null);
+    setThumbnailFile(null);
   }
 
   async function handleDeleteChannel(channelId, channelTitle) {
@@ -149,6 +170,35 @@ function ChannelCard() {
     }
   }
 
+  async function handleUpdateThumbnail(channel) {
+    if (!thumbnailFile) {
+      alert("업로드할 이미지를 선택해주세요");
+      return;
+    }
+
+    const realId = channel.id.replace(/^(youtube-|podbbang_|spotify_)/, "");
+    setUpdatingId(channel.id);
+    setUpdateLogs([
+      {
+        text: "썸네일을 업로드하는 중...",
+        type: "info",
+      },
+    ]);
+
+    try {
+      await updateYouTubeChannel(realId, undefined, undefined, thumbnailFile);
+      appendLog("썸네일 수정이 완료되었습니다.", "done");
+      await refreshChannels();
+      cancelThumbnailEdit();
+      alert("채널 썸네일이 업데이트되었습니다.");
+    } catch (err) {
+      appendLog(`오류: ${err.message}`, "error");
+      alert(`썸네일 업데이트 실패: ${err.message}`);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <section className="channels">
       <h2>채널 목록 ({channels.length})</h2>
@@ -203,13 +253,22 @@ function ChannelCard() {
                   삭제
                 </button>
                 {isYouTubeChannel(channel) && (
-                  <button
-                    type="button"
-                    onClick={() => startAuthorEdit(channel)}
-                    disabled={updatingId !== null}
-                  >
-                    author 수정
-                  </button>
+                  <div className="flex-gap-6">
+                    <button
+                      type="button"
+                      onClick={() => startAuthorEdit(channel)}
+                      disabled={updatingId !== null}
+                    >
+                      author 수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startThumbnailEdit(channel)}
+                      disabled={updatingId !== null}
+                    >
+                      채널 썸네일 수정
+                    </button>
+                  </div>
                 )}
                 <button
                   type="button"
@@ -248,6 +307,35 @@ function ChannelCard() {
                     <button
                       type="button"
                       onClick={cancelAuthorEdit}
+                      disabled={updatingId === channel.id}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
+              {editingThumbnailId === channel.id && isYouTubeChannel(channel) && (
+                <div className="thumbnail-editor">
+                  <div className="thumbnail-editor__label">채널 썸네일 업로드</div>
+                  <p className="thumbnail-editor__notice">
+                    * 썸네일 수정 시에는 에피소드가 아닌 썸네일 이미지만
+                    업데이트됩니다.
+                  </p>
+                  <ThumbnailUpload
+                    onChange={setThumbnailFile}
+                    disabled={updatingId === channel.id}
+                  />
+                  <div className="thumbnail-editor__actions">
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateThumbnail(channel)}
+                      disabled={updatingId === channel.id || !thumbnailFile}
+                    >
+                      {updatingId === channel.id ? "업로드 중..." : "저장"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelThumbnailEdit}
                       disabled={updatingId === channel.id}
                     >
                       취소

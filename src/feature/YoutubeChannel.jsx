@@ -1,14 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import { addYouTubeChannel } from "../api";
 import { useChannels } from "../context/ChannelContext.jsx";
+import ThumbnailUpload from "../components/ThumbnailUpload.jsx";
 
 function YoutubeChannel() {
   const { isLoading, setIsLoading, refreshChannels } = useChannels();
+
   const [youtubeError, setYoutubeError] = useState("");
   const [channelUrl, setChannelUrl] = useState("");
   const [author, setAuthor] = useState("");
   const [logs, setLogs] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+
   const terminalRef = useRef(null);
+  const thumbnailRef = useRef(null);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -27,11 +32,13 @@ function YoutubeChannel() {
     setLogs([{ text: "채널 정보를 저장하는 중...", type: "info" }]);
 
     try {
-      await addYouTubeChannel(channelUrl, author);
+      await addYouTubeChannel(channelUrl, author, imageFile);
       appendLog("YouTube 채널 등록이 완료되었습니다.", "done");
       await refreshChannels();
       setChannelUrl("");
       setAuthor("");
+      setImageFile(null);
+      thumbnailRef.current?.reset();
     } catch (err) {
       setYoutubeError(err.message || "채널 추가 실패");
     } finally {
@@ -44,23 +51,32 @@ function YoutubeChannel() {
       <h2>YouTube 채널/플레이리스트 추가</h2>
       <form onSubmit={handleAddChannel}>
         <div className="form-group">
-          <input
-            type="text"
-            placeholder="youtube.com/@채널명 또는 youtube.com/playlist?list=..."
-            value={channelUrl}
-            onChange={(e) => setChannelUrl(e.target.value)}
-            required
+          <div className="form-fields">
+            <input
+              type="text"
+              placeholder="youtube.com/@채널명 또는 youtube.com/playlist?list=..."
+              value={channelUrl}
+              onChange={(e) => setChannelUrl(e.target.value)}
+              required
+              disabled={isLoading}
+              className="url-input"
+            />
+            <input
+              type="text"
+              placeholder="author (선택)"
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              disabled={isLoading}
+              className="author-input"
+            />
+          </div>
+
+          <ThumbnailUpload
+            ref={thumbnailRef}
+            onChange={setImageFile}
             disabled={isLoading}
-            className="url-input"
           />
-          <input
-            type="text"
-            placeholder="author (선택)"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            disabled={isLoading}
-            className="author-input"
-          />
+
           <button type="submit" disabled={isLoading}>
             {isLoading ? "추가 중..." : "추가"}
           </button>

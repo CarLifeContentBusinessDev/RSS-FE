@@ -26,14 +26,54 @@ export async function getChannels() {
   return response.json();
 }
 
-export async function addYouTubeChannel(url, author) {
-  const body = { url };
+export async function addYouTubeChannel(url, author, imageFile) {
+  if (!imageFile) {
+    const body = { url };
 
-  if (author?.trim()) {
-    body.author = author.trim();
+    if (author?.trim()) {
+      body.author = author.trim();
+    }
+
+    return postJson(`${API_BASE}/youtube/process`, body);
   }
 
-  return postJson(`${API_BASE}/youtube/process`, body);
+  // 이미지가 있으면 R2 업로드를 위해 multipart/form-data로 전송
+  const formData = new FormData();
+  formData.append("url", url);
+
+  if (author?.trim()) {
+    formData.append("author", author.trim());
+  }
+
+  formData.append("image", imageFile);
+
+  const response = await fetch(`${API_BASE}/youtube/process`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
+}
+
+// 이미지 업로드(multipart/form-data) 응답 에러를 사용자 친화적인 메시지로 변환
+// 413(Payload Too Large)의 경우 서버가 JSON 대신 기본 에러 페이지를 반환하므로 별도 처리 필요
+async function parseFormDataError(response) {
+  if (response.status === 413) {
+    return new Error(
+      "이미지 파일 용량이 너무 큽니다. 더 작은 이미지로 다시 시도해주세요.",
+    );
+  }
+
+  const error = await response.json().catch(() => ({}));
+  return new Error(
+    error.message ||
+      error.error ||
+      `Request failed with status: ${response.status}`,
+  );
 }
 
 // EventSource 대신 공통 streamProgress 함수를 사용하도록 통일하고 signal 인자 추가
@@ -171,14 +211,40 @@ async function streamProgress(url, onProgress, signal) {
 }
 
 // update 계열 함수들도 signal 인자 추가
-export async function updateYouTubeChannel(channelId, url, author) {
-  const body = { url };
+export async function updateYouTubeChannel(channelId, url, author, imageFile) {
+  if (!imageFile) {
+    const body = { url };
 
-  if (author?.trim()) {
-    body.author = author.trim();
+    if (author?.trim()) {
+      body.author = author.trim();
+    }
+
+    return postJson(`${API_BASE}/youtube/update/${channelId}`, body);
   }
 
-  return postJson(`${API_BASE}/youtube/update/${channelId}`, body);
+  // 이미지가 있으면 R2 업로드를 위해 multipart/form-data로 전송
+  const formData = new FormData();
+
+  if (url) {
+    formData.append("url", url);
+  }
+
+  if (author?.trim()) {
+    formData.append("author", author.trim());
+  }
+
+  formData.append("image", imageFile);
+
+  const response = await fetch(`${API_BASE}/youtube/update/${channelId}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
 }
 
 export function updatePodbbangChannel(channelId, onProgress, signal) {

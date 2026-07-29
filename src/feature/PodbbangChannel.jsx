@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { useChannels } from "../context/ChannelContext.jsx";
 import { addPodbbangChannelWithProgress } from "../api.js";
+import ThumbnailUpload from "../components/ThumbnailUpload.jsx";
 
 function PodbbangChannel() {
   const { isLoading, setIsLoading, refreshChannels } = useChannels();
+
   const [podbbangId, setPodbbangId] = useState("");
   const [podbbangError, setPodbbangError] = useState("");
   const [logs, setLogs] = useState([]);
+  // const [imageFile, setImageFile] = useState(null);
+
   const terminalRef = useRef(null);
+  // const thumbnailRef = useRef(null);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -75,6 +80,11 @@ function PodbbangChannel() {
             disabled={isLoading}
             className="url-input"
           />
+          {/* <ThumbnailUpload
+            ref={thumbnailRef}
+            onChange={setImageFile}
+            disabled={isLoading}
+          /> */}
           <button type="submit" disabled={isLoading}>
             {isLoading ? "추가 중..." : "추가"}
           </button>
