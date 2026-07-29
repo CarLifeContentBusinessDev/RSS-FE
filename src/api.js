@@ -177,27 +177,29 @@ async function streamProgress(url, onProgress, signal) {
 
         // SSE 표준 포맷인 'data: ...' 형태 파싱
         if (line.startsWith("data: ")) {
+          const dataStr = line.replace("data: ", "").trim();
+          if (!dataStr) continue;
+
+          let data;
           try {
-            const dataStr = line.replace("data: ", "").trim();
-            if (!dataStr) continue;
-
-            const data = JSON.parse(dataStr);
-
-            // 핑(ping) 이벤트는 무시 (연결 유지 목적)
-            if (data.type === "ping") {
-              continue;
-            }
-
-            if (data.type === "complete") {
-              return data; // 최종 결과 반환
-            } else if (data.type === "error") {
-              throw new Error(data.message);
-            } else {
-              onProgress?.(data); // 진행 상태 콜백 실행
-            }
+            data = JSON.parse(dataStr);
           } catch (e) {
             // JSON 파싱 에러 발생 시 스트림 자체를 끊지 않고 해당 청크만 무시
             console.error("SSE JSON 파싱 에러:", e, line);
+            continue;
+          }
+
+          // 핑(ping) 이벤트는 무시 (연결 유지 목적)
+          if (data.type === "ping") {
+            continue;
+          }
+
+          if (data.type === "complete") {
+            return data; // 최종 결과 반환
+          } else if (data.type === "error") {
+            throw new Error(data.message);
+          } else {
+            onProgress?.(data); // 진행 상태 콜백 실행
           }
         }
       }
