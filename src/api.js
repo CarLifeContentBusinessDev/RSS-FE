@@ -1,3 +1,5 @@
+import { parseDurationToSeconds } from "./utils/duration.js";
+
 const API_BASE = import.meta.env.VITE_API_URL;
 
 async function postJson(url, body) {
@@ -138,11 +140,208 @@ export function addSpotifyShowWithProgress(spotifyUrl, onProgress, signal) {
   );
 }
 
+export async function createCustomRss({ title, description, image, items }) {
+  const formData = new FormData();
+  formData.append("title", title);
+
+  if (description?.trim()) {
+    formData.append("description", description.trim());
+  }
+
+  if (image) {
+    formData.append("image", image);
+  }
+
+  const itemsMeta = items.map(({ title, description, pubDate, duration }) => {
+    const durationSeconds = parseDurationToSeconds(duration);
+    return {
+      title,
+      description,
+      pubDate: pubDate || undefined,
+      duration: durationSeconds !== null ? String(durationSeconds) : undefined,
+    };
+  });
+  formData.append("items", JSON.stringify(itemsMeta));
+
+  items.forEach((item, index) => {
+    formData.append(`item_${index}_audio`, item.audioFile);
+
+    if (item.thumbnailFile) {
+      formData.append(`item_${index}_thumbnail`, item.thumbnailFile);
+    }
+  });
+
+  const response = await fetch(`${API_BASE}/custom/create`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
+}
+
+export async function getCustomChannelDetail(channelId) {
+  const response = await fetch(`${API_BASE}/api/channel/${channelId}`);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      error.message ||
+        error.error ||
+        `Request failed with status: ${response.status}`,
+    );
+  }
+
+  const data = await response.json();
+  return data.channel ?? data;
+}
+
+export async function updateCustomRssChannel(
+  channelId,
+  { title, description },
+  imageFile,
+) {
+  const formData = new FormData();
+
+  if (title?.trim()) {
+    formData.append("title", title.trim());
+  }
+
+  if (description !== undefined) {
+    formData.append("description", description?.trim() ?? "");
+  }
+
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+
+  const response = await fetch(`${API_BASE}/custom/${channelId}`, {
+    method: "PATCH",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
+}
+
+export async function addCustomRssItem(
+  channelId,
+  { title, description, pubDate, duration },
+  audioFile,
+  thumbnailFile,
+) {
+  const formData = new FormData();
+  formData.append("title", title.trim());
+
+  if (description?.trim()) {
+    formData.append("description", description.trim());
+  }
+
+  if (pubDate) {
+    formData.append("pubDate", pubDate);
+  }
+
+  const durationSeconds = parseDurationToSeconds(duration);
+  if (durationSeconds !== null) {
+    formData.append("duration", String(durationSeconds));
+  }
+
+  formData.append("audio", audioFile);
+
+  if (thumbnailFile) {
+    formData.append("thumbnail", thumbnailFile);
+  }
+
+  const response = await fetch(`${API_BASE}/custom/${channelId}/items`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
+}
+
+// audioFile/thumbnailFile을 넘기지 않으면 기존 값을 유지한다는 의미
+export async function updateCustomRssItem(
+  channelId,
+  itemId,
+  { title, description, pubDate, duration },
+  audioFile,
+  thumbnailFile,
+) {
+  const formData = new FormData();
+
+  if (title?.trim()) {
+    formData.append("title", title.trim());
+  }
+
+  if (description !== undefined) {
+    formData.append("description", description?.trim() ?? "");
+  }
+
+  if (pubDate) {
+    formData.append("pubDate", pubDate);
+  }
+
+  const durationSeconds = parseDurationToSeconds(duration);
+  if (durationSeconds !== null) {
+    formData.append("duration", String(durationSeconds));
+  }
+
+  if (audioFile) {
+    formData.append("audio", audioFile);
+  }
+
+  if (thumbnailFile) {
+    formData.append("thumbnail", thumbnailFile);
+  }
+
+  const response = await fetch(
+    `${API_BASE}/custom/${channelId}/items/${itemId}`,
+    {
+      method: "PATCH",
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    throw await parseFormDataError(response);
+  }
+
+  return response.json();
+}
+
+export async function deleteCustomRssItem(channelId, itemId) {
+  const response = await fetch(
+    `${API_BASE}/custom/${channelId}/items/${itemId}`,
+    { method: "DELETE" },
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(
+      error.message ||
+        error.error ||
+        `Request failed with status: ${response.status}`,
+    );
+  }
+
+  return response.json();
+}
+
 export function getRssUrl(channelId) {
   return `${API_BASE}/rss/${channelId}`;
 }
 
-// 핵심 변경 사항: EventSource -> fetch + ReadableStream으로 교체
 async function streamProgress(url, onProgress, signal) {
   const response = await fetch(url, {
     method: "GET",

@@ -5,6 +5,7 @@ import PodbbangChannel from "./feature/PodbbangChannel.jsx";
 import SpotifyChannel from "./feature/SpotifyChannel.jsx";
 import ChannelCard from "./feature/ChannelCard.jsx";
 import { useState, useEffect } from "react";
+import Maker from "./feature/Maker.jsx";
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -30,7 +31,7 @@ function App() {
         <header className="app-header">
           <div className="header-text">
             <h1>RSS 피드 생성기</h1>
-            <p>YouTube, 팟빵, Spotify를 RSS 피드로 변환</p>
+            <p>YouTube, 팟빵, Spotify를 RSS 피드로 변환 & RSS 생성</p>
           </div>
           <button onClick={() => setIsDark(!isDark)} className="theme-toggle">
             {isDark ? "☀️" : "🌙 "}
@@ -40,6 +41,7 @@ function App() {
           <YoutubeChannel />
           <PodbbangChannel />
           <SpotifyChannel />
+          <Maker />
           <ChannelCard />
         </main>
       </div>
