@@ -96,10 +96,14 @@ function ChannelCard() {
     setManagingItemsId(null);
     setEditingMetaId(channel.id);
     setMetaDraft({
-      title: channel.title ?? "",
-      description: channel.description ?? "",
-      copyright: channel.copyright ?? "",
-      author: channel.author ?? "",
+      title: channel.title || "Podcast Channel",
+      description: channel.description || "Podcast RSS Feed",
+      copyright: channel.copyright || channel.author || "",
+      author:
+        channel.author ||
+        channel.host ||
+        channel.videos?.[0]?.author ||
+        "Unknown",
     });
     setMetaImage(null);
   }
@@ -421,7 +425,7 @@ function ChannelCard() {
                       <span>채널명</span>
                       <input
                         type="text"
-                        placeholder="title"
+                        placeholder="title (default: Podcast Channel)"
                         value={metaDraft.title}
                         onChange={(e) =>
                           setMetaDraft((prev) => ({
@@ -436,7 +440,7 @@ function ChannelCard() {
                     <label className="meta-field">
                       <span>채널 설명</span>
                       <textarea
-                        placeholder="description (선택)"
+                        placeholder="description (default: Podcast RSS Feed)"
                         value={metaDraft.description}
                         onChange={(e) =>
                           setMetaDraft((prev) => ({
@@ -454,7 +458,7 @@ function ChannelCard() {
                         <span>카피라이트</span>
                         <input
                           type="text"
-                          placeholder="copyright (선택)"
+                          placeholder="copyright (default: author or empty)"
                           value={metaDraft.copyright}
                           onChange={(e) =>
                             setMetaDraft((prev) => ({
@@ -469,7 +473,7 @@ function ChannelCard() {
                         <span>진행자명</span>
                         <input
                           type="text"
-                          placeholder="author (선택)"
+                          placeholder="author (default: Unknown)"
                           value={metaDraft.author}
                           onChange={(e) =>
                             setMetaDraft((prev) => ({
