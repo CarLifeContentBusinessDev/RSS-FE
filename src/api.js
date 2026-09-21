@@ -201,7 +201,7 @@ export async function getCustomChannelDetail(channelId) {
 
 export async function updateCustomRssChannel(
   channelId,
-  { title, description },
+  { title, description, copyright, author },
   imageFile,
 ) {
   const formData = new FormData();
@@ -212,6 +212,14 @@ export async function updateCustomRssChannel(
 
   if (description !== undefined) {
     formData.append("description", description?.trim() ?? "");
+  }
+
+  if (copyright !== undefined) {
+    formData.append("copyright", copyright?.trim() ?? "");
+  }
+
+  if (author !== undefined) {
+    formData.append("author", author?.trim() ?? "");
   }
 
   if (imageFile) {
@@ -412,13 +420,20 @@ async function streamProgress(url, onProgress, signal) {
 }
 
 // update 계열 함수들도 signal 인자 추가
-export async function updateYouTubeChannel(channelId, url, author, imageFile) {
+// title/description/copyright을 넘기면 재수집 없이 해당 값만 override
+export async function updateYouTubeChannel(
+  channelId,
+  { url, author, title, description, copyright } = {},
+  imageFile,
+) {
   if (!imageFile) {
-    const body = { url };
+    const body = {};
 
-    if (author?.trim()) {
-      body.author = author.trim();
-    }
+    if (url) body.url = url;
+    if (author !== undefined) body.author = author?.trim() ?? "";
+    if (title?.trim()) body.title = title.trim();
+    if (description !== undefined) body.description = description?.trim() ?? "";
+    if (copyright !== undefined) body.copyright = copyright?.trim() ?? "";
 
     return postJson(`${API_BASE}/youtube/update/${channelId}`, body);
   }
@@ -426,12 +441,14 @@ export async function updateYouTubeChannel(channelId, url, author, imageFile) {
   // 이미지가 있으면 R2 업로드를 위해 multipart/form-data로 전송
   const formData = new FormData();
 
-  if (url) {
-    formData.append("url", url);
+  if (url) formData.append("url", url);
+  if (author !== undefined) formData.append("author", author?.trim() ?? "");
+  if (title?.trim()) formData.append("title", title.trim());
+  if (description !== undefined) {
+    formData.append("description", description?.trim() ?? "");
   }
-
-  if (author?.trim()) {
-    formData.append("author", author.trim());
+  if (copyright !== undefined) {
+    formData.append("copyright", copyright?.trim() ?? "");
   }
 
   formData.append("image", imageFile);

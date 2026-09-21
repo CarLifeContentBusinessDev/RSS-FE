@@ -7,21 +7,29 @@ import {
 } from "react";
 
 const ThumbnailUpload = forwardRef(function ThumbnailUpload(
-  { id, placeholder = "채널 썸네일 업로드 (선택)", onChange, disabled = false },
+  {
+    id,
+    placeholder = "채널 썸네일 업로드 (선택)",
+    currentImageUrl,
+    onChange,
+    disabled = false,
+  },
   ref,
 ) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
-  const [imageSrc, setImageSrc] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [imageSrc, setImageSrc] = useState(currentImageUrl ?? null);
+  const [fileName, setFileName] = useState(
+    currentImageUrl ? "현재 썸네일" : "",
+  );
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     reset() {
-      setImageSrc(null);
-      setFileName("");
+      setImageSrc(currentImageUrl ?? null);
+      setFileName(currentImageUrl ? "현재 썸네일" : "");
       if (inputRef.current) {
         inputRef.current.value = "";
       }

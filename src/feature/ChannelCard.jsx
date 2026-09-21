@@ -31,21 +31,18 @@ function emptyItemDraft() {
   };
 }
 
+function emptyMetaDraft() {
+  return { title: "", description: "", copyright: "", author: "" };
+}
+
 function ChannelCard() {
   const { channels, refreshChannels } = useChannels();
   const [updatingId, setUpdatingId] = useState(null);
   const [updateLogs, setUpdateLogs] = useState([]);
-  const [editingAuthorId, setEditingAuthorId] = useState(null);
-  const [authorDraft, setAuthorDraft] = useState("");
-  const [editingThumbnailId, setEditingThumbnailId] = useState(null);
-  const [thumbnailFile, setThumbnailFile] = useState(null);
 
-  const [editingChannelMetaId, setEditingChannelMetaId] = useState(null);
-  const [channelMetaDraft, setChannelMetaDraft] = useState({
-    title: "",
-    description: "",
-  });
-  const [channelMetaImage, setChannelMetaImage] = useState(null);
+  const [editingMetaId, setEditingMetaId] = useState(null);
+  const [metaDraft, setMetaDraft] = useState(emptyMetaDraft());
+  const [metaImage, setMetaImage] = useState(null);
 
   const [managingItemsId, setManagingItemsId] = useState(null);
   const [managedVideos, setManagedVideos] = useState([]);
@@ -57,7 +54,6 @@ function ChannelCard() {
   const [newItemDraft, setNewItemDraft] = useState(emptyItemDraft());
 
   const terminalRef = useRef(null);
-  const channelMetaThumbnailRef = useRef(null);
 
   useEffect(() => {
     if (terminalRef.current) {
@@ -92,38 +88,25 @@ function ChannelCard() {
     return channel.type === "custom";
   }
 
-  function startAuthorEdit(channel) {
-    setEditingThumbnailId(null);
-    setEditingAuthorId(channel.id);
-    setAuthorDraft(channel.author ?? "");
-    setUpdateLogs([
-      {
-        text: "author를 수정 완료",
-        type: "info",
-      },
-    ]);
+  function isEditableChannel(channel) {
+    return isYouTubeChannel(channel) || isCustomChannel(channel);
   }
 
-  function cancelAuthorEdit() {
-    setEditingAuthorId(null);
-    setAuthorDraft("");
+  function startMetaEdit(channel) {
+    setManagingItemsId(null);
+    setEditingMetaId(channel.id);
+    setMetaDraft({
+      title: channel.title ?? "",
+      description: channel.description ?? "",
+      copyright: channel.copyright ?? "",
+      author: channel.author ?? "",
+    });
+    setMetaImage(null);
   }
 
-  function startThumbnailEdit(channel) {
-    setEditingAuthorId(null);
-    setEditingThumbnailId(channel.id);
-    setThumbnailFile(null);
-    setUpdateLogs([
-      {
-        text: "업로드할 썸네일 이미지를 선택해주세요",
-        type: "info",
-      },
-    ]);
-  }
-
-  function cancelThumbnailEdit() {
-    setEditingThumbnailId(null);
-    setThumbnailFile(null);
+  function cancelMetaEdit() {
+    setEditingMetaId(null);
+    setMetaImage(null);
   }
 
   async function handleDeleteChannel(channelId, channelTitle) {
@@ -173,7 +156,7 @@ function ChannelCard() {
         const youtubeUrl = realId.startsWith("PL")
           ? `https://www.youtube.com/playlist?list=${realId}`
           : `https://www.youtube.com/channel/${realId}`;
-        await updateYouTubeChannel(realId, youtubeUrl);
+        await updateYouTubeChannel(realId, { url: youtubeUrl });
       }
 
       appendLog("업데이트 완료", "done");
@@ -185,99 +168,26 @@ function ChannelCard() {
     }
   }
 
-  async function handleUpdateAuthor(channel) {
-    const realId = channel.id.replace(/^(youtube-|podbbang_|spotify_)/, "");
-    setUpdatingId(channel.id);
-    setUpdateLogs([
-      {
-        text: "author 정보를 저장하는 중...",
-        type: "info",
-      },
-    ]);
-
-    try {
-      await updateYouTubeChannel(
-        realId,
-        undefined,
-        authorDraft.trim() || undefined,
-      );
-      appendLog(
-        "author 수정이 완료되었습니다. RSS도 함께 업데이트하는 것을 권장합니다.",
-        "done",
-      );
-      await refreshChannels();
-      cancelAuthorEdit();
-    } catch (err) {
-      appendLog(`오류: ${err.message}`, "error");
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  async function handleUpdateThumbnail(channel) {
-    if (!thumbnailFile) {
-      alert("업로드할 이미지를 선택해주세요");
-      return;
-    }
-
-    const realId = channel.id.replace(/^(youtube-|podbbang_|spotify_)/, "");
-    setUpdatingId(channel.id);
-    setUpdateLogs([
-      {
-        text: "썸네일을 업로드하는 중...",
-        type: "info",
-      },
-    ]);
-
-    try {
-      await updateYouTubeChannel(realId, undefined, undefined, thumbnailFile);
-      appendLog("썸네일 수정이 완료되었습니다.", "done");
-      await refreshChannels();
-      cancelThumbnailEdit();
-      alert("채널 썸네일이 업데이트되었습니다.");
-    } catch (err) {
-      appendLog(`오류: ${err.message}`, "error");
-      alert(`썸네일 업데이트 실패: ${err.message}`);
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  function startChannelMetaEdit(channel) {
-    setEditingAuthorId(null);
-    setEditingThumbnailId(null);
-    setManagingItemsId(null);
-    setEditingChannelMetaId(channel.id);
-    setChannelMetaDraft({
-      title: channel.title ?? "",
-      description: channel.description ?? "",
-    });
-    setChannelMetaImage(null);
-  }
-
-  function cancelChannelMetaEdit() {
-    setEditingChannelMetaId(null);
-    channelMetaThumbnailRef.current?.reset();
-  }
-
-  async function handleUpdateChannelMeta(channel) {
-    if (!channelMetaDraft.title.trim()) {
-      alert("채널 타이틀을 입력해주세요");
+  async function handleSaveMeta(channel) {
+    if (!metaDraft.title.trim()) {
+      alert("채널명을 입력해주세요");
       return;
     }
 
     setUpdatingId(channel.id);
-    setUpdateLogs([{ text: "채널 정보를 저장하는 중...", type: "info" }]);
+    setUpdateLogs([{ text: "RSS 정보를 저장하는 중...", type: "info" }]);
 
     try {
-      await updateCustomRssChannel(
-        channel.id,
-        channelMetaDraft,
-        channelMetaImage,
-      );
-      appendLog("채널 정보 수정이 완료되었습니다.", "done");
+      if (isYouTubeChannel(channel)) {
+        const realId = channel.id.replace(/^(youtube-|podbbang_|spotify_)/, "");
+        await updateYouTubeChannel(realId, metaDraft, metaImage);
+      } else {
+        await updateCustomRssChannel(channel.id, metaDraft, metaImage);
+      }
+
+      appendLog("RSS 정보 수정이 완료되었습니다.", "done");
       await refreshChannels();
-      cancelChannelMetaEdit();
+      cancelMetaEdit();
     } catch (err) {
       appendLog(`오류: ${err.message}`, "error");
     } finally {
@@ -301,9 +211,7 @@ function ChannelCard() {
   }
 
   function startManageItems(channel) {
-    setEditingAuthorId(null);
-    setEditingThumbnailId(null);
-    setEditingChannelMetaId(null);
+    setEditingMetaId(null);
     setManagingItemsId(channel.id);
     setEditingItemId(null);
     setIsAddingItem(false);
@@ -470,49 +378,6 @@ function ChannelCard() {
                 >
                   RSS 복사
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteChannel(channel.id, channel.title)}
-                  className="btn-delete"
-                >
-                  삭제
-                </button>
-                {isYouTubeChannel(channel) && (
-                  <div className="flex-gap-6">
-                    <button
-                      type="button"
-                      onClick={() => startAuthorEdit(channel)}
-                      disabled={updatingId !== null}
-                    >
-                      author 수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startThumbnailEdit(channel)}
-                      disabled={updatingId !== null}
-                    >
-                      채널 썸네일 수정
-                    </button>
-                  </div>
-                )}
-                {isCustomChannel(channel) && (
-                  <div className="flex-gap-6">
-                    <button
-                      type="button"
-                      onClick={() => startChannelMetaEdit(channel)}
-                      disabled={updatingId !== null}
-                    >
-                      채널 정보 수정
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startManageItems(channel)}
-                      disabled={updatingId !== null}
-                    >
-                      아이템 관리
-                    </button>
-                  </div>
-                )}
                 {!isCustomChannel(channel) && (
                   <button
                     type="button"
@@ -522,88 +387,44 @@ function ChannelCard() {
                     {updatingId === channel.id ? "업데이트 중..." : "업데이트"}
                   </button>
                 )}
-              </div>
-              {editingAuthorId === channel.id && isYouTubeChannel(channel) && (
-                <div className="author-editor">
-                  <div className="author-editor__label">기존 author</div>
-                  <div className="author-editor__current">
-                    {channel.author?.trim() ? channel.author : "미설정"}
-                  </div>
-                  <p className="author-editor__notice">
-                    * author 수정 시에는 에피소드가 아닌 author 정보만
-                    업데이트됩니다.
-                  </p>
-                  <div className="author-editor__form">
-                    <input
-                      className="author-editor__input"
-                      type="text"
-                      value={authorDraft}
-                      onChange={(e) => setAuthorDraft(e.target.value)}
-                      placeholder="새 author 입력"
-                      disabled={updatingId === channel.id}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateAuthor(channel)}
-                      disabled={updatingId === channel.id}
-                    >
-                      {updatingId === channel.id ? "저장 중..." : "저장"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelAuthorEdit}
-                      disabled={updatingId === channel.id}
-                    >
-                      취소
-                    </button>
-                  </div>
-                </div>
-              )}
-              {editingThumbnailId === channel.id &&
-                isYouTubeChannel(channel) && (
-                  <div className="thumbnail-editor">
-                    <div className="thumbnail-editor__label">
-                      채널 썸네일 업로드
-                    </div>
-                    <p className="thumbnail-editor__notice">
-                      * 썸네일 수정 시에는 에피소드가 아닌 썸네일 이미지만
-                      업데이트됩니다.
-                    </p>
-                    <ThumbnailUpload
-                      onChange={setThumbnailFile}
-                      disabled={updatingId === channel.id}
-                    />
-                    <div className="thumbnail-editor__actions">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateThumbnail(channel)}
-                        disabled={updatingId === channel.id || !thumbnailFile}
-                      >
-                        {updatingId === channel.id ? "업로드 중..." : "저장"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelThumbnailEdit}
-                        disabled={updatingId === channel.id}
-                      >
-                        취소
-                      </button>
-                    </div>
-                  </div>
+                {isEditableChannel(channel) && (
+                  <button
+                    type="button"
+                    onClick={() => startMetaEdit(channel)}
+                    disabled={updatingId !== null}
+                  >
+                    RSS 수정
+                  </button>
                 )}
-              {editingChannelMetaId === channel.id &&
-                isCustomChannel(channel) && (
-                  <div className="thumbnail-editor">
-                    <div className="thumbnail-editor__label">
-                      채널 정보 수정
-                    </div>
-                    <div className="form-fields">
+                {isCustomChannel(channel) && (
+                  <button
+                    type="button"
+                    onClick={() => startManageItems(channel)}
+                    disabled={updatingId !== null}
+                  >
+                    아이템 관리
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteChannel(channel.id, channel.title)}
+                  className="btn-delete"
+                >
+                  삭제
+                </button>
+              </div>
+              {editingMetaId === channel.id && isEditableChannel(channel) && (
+                <div className="thumbnail-editor">
+                  <div className="thumbnail-editor__label">RSS 정보 수정</div>
+                  <div className="form-fields">
+                    <label className="meta-field">
+                      <span>채널명</span>
                       <input
                         type="text"
-                        placeholder="채널 타이틀"
-                        value={channelMetaDraft.title}
+                        placeholder="title"
+                        value={metaDraft.title}
                         onChange={(e) =>
-                          setChannelMetaDraft((prev) => ({
+                          setMetaDraft((prev) => ({
                             ...prev,
                             title: e.target.value,
                           }))
@@ -611,11 +432,14 @@ function ChannelCard() {
                         disabled={updatingId === channel.id}
                         className="maker-input"
                       />
+                    </label>
+                    <label className="meta-field">
+                      <span>채널 설명</span>
                       <textarea
-                        placeholder="채널 설명 (선택)"
-                        value={channelMetaDraft.description}
+                        placeholder="description (선택)"
+                        value={metaDraft.description}
                         onChange={(e) =>
-                          setChannelMetaDraft((prev) => ({
+                          setMetaDraft((prev) => ({
                             ...prev,
                             description: e.target.value,
                           }))
@@ -624,34 +448,69 @@ function ChannelCard() {
                         className="maker-textarea"
                         rows={2}
                       />
+                    </label>
+                    <div className="maker-item__row">
+                      <label className="maker-item__field">
+                        <span>카피라이트</span>
+                        <input
+                          type="text"
+                          placeholder="copyright (선택)"
+                          value={metaDraft.copyright}
+                          onChange={(e) =>
+                            setMetaDraft((prev) => ({
+                              ...prev,
+                              copyright: e.target.value,
+                            }))
+                          }
+                          disabled={updatingId === channel.id}
+                        />
+                      </label>
+                      <label className="maker-item__field">
+                        <span>진행자명</span>
+                        <input
+                          type="text"
+                          placeholder="author (선택)"
+                          value={metaDraft.author}
+                          onChange={(e) =>
+                            setMetaDraft((prev) => ({
+                              ...prev,
+                              author: e.target.value,
+                            }))
+                          }
+                          disabled={updatingId === channel.id}
+                        />
+                      </label>
+                    </div>
+                    <div className="meta-field">
+                      <span>썸네일</span>
                       <ThumbnailUpload
-                        ref={channelMetaThumbnailRef}
                         placeholder="새 썸네일 업로드 (선택, 비워두면 기존 유지)"
-                        onChange={setChannelMetaImage}
+                        currentImageUrl={channel.thumbnail}
+                        onChange={setMetaImage}
                         disabled={updatingId === channel.id}
                       />
                     </div>
-                    <div className="thumbnail-editor__actions">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateChannelMeta(channel)}
-                        disabled={
-                          updatingId === channel.id ||
-                          !channelMetaDraft.title.trim()
-                        }
-                      >
-                        {updatingId === channel.id ? "저장 중..." : "저장"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelChannelMetaEdit}
-                        disabled={updatingId === channel.id}
-                      >
-                        취소
-                      </button>
-                    </div>
                   </div>
-                )}
+                  <div className="thumbnail-editor__actions">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveMeta(channel)}
+                      disabled={
+                        updatingId === channel.id || !metaDraft.title.trim()
+                      }
+                    >
+                      {updatingId === channel.id ? "저장 중..." : "저장"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelMetaEdit}
+                      disabled={updatingId === channel.id}
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
               {managingItemsId === channel.id && isCustomChannel(channel) && (
                 <div className="thumbnail-editor">
                   <div className="thumbnail-editor__label">아이템 관리</div>
