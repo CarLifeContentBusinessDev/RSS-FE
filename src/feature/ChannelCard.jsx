@@ -422,10 +422,10 @@ function ChannelCard() {
                   <div className="thumbnail-editor__label">RSS 정보 수정</div>
                   <div className="form-fields">
                     <label className="meta-field">
-                      <span>채널명</span>
+                      <span>채널명*</span>
                       <input
                         type="text"
-                        placeholder="title (default: Podcast Channel)"
+                        placeholder="title (필수)"
                         value={metaDraft.title}
                         onChange={(e) =>
                           setMetaDraft((prev) => ({
