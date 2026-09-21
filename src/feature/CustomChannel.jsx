@@ -22,7 +22,7 @@ function createEmptyItem() {
   };
 }
 
-function Maker() {
+function CustomChannel() {
   const { isLoading, setIsLoading, refreshChannels } = useChannels();
 
   const [channelTitle, setChannelTitle] = useState("");
@@ -203,4 +203,4 @@ function Maker() {
   );
 }
 
-export default Maker;
+export default CustomChannel;

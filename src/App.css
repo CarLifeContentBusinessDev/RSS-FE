@@ -539,6 +539,74 @@ h2 {
   font-size: 14px;
 }
 
+.register-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tab-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  position: relative;
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 12px 14px 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn:focus {
+  outline: none;
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid var(--border-hover);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.tab-btn[aria-selected="true"] {
+  color: var(--text-primary);
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  transition:
+    left 0.22s cubic-bezier(0.65, 0, 0.35, 1),
+    width 0.22s cubic-bezier(0.65, 0, 0.35, 1),
+    background-color 0.15s;
+}
+
+.tab-panels {
+  padding: 24px;
+}
+
+.register-card .tab-panel > section.add-channel {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
 .channel-list {
   display: flex;
   flex-direction: column;
@@ -902,5 +970,10 @@ h2 {
   .maker-item-manager__row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .tab-btn {
+    padding: 10px 10px 11px;
+    font-size: 13px;
   }
 }

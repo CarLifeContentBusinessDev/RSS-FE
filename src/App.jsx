@@ -1,11 +1,8 @@
 import "./App.css";
 import { ChannelProvider } from "./context/ChannelContext.jsx";
-import YoutubeChannel from "./feature/YoutubeChannel.jsx";
-import PodbbangChannel from "./feature/PodbbangChannel.jsx";
-import SpotifyChannel from "./feature/SpotifyChannel.jsx";
+import ChannelTabs from "./feature/ChannelTabs.jsx";
 import ChannelCard from "./feature/ChannelCard.jsx";
 import { useState, useEffect } from "react";
-import Maker from "./feature/Maker.jsx";
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -38,10 +35,7 @@ function App() {
           </button>
         </header>
         <main>
-          <YoutubeChannel />
-          <PodbbangChannel />
-          <SpotifyChannel />
-          <Maker />
+          <ChannelTabs />
           <ChannelCard />
         </main>
       </div>
